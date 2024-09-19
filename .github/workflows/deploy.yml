@@ -30,9 +30,10 @@ jobs:
       run: docker pull postgres:16
     - name: Criar/rodar o container do banco de dados
       run: |
-          docker run -d --name database-container --network my-net -p 5432:5432 \
-          -e POSTGRES_DB=gamesdatabase -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres \
-          postgres:16
+      if [ $(docker ps -a -q -f name=database-container) ]; then
+      docker rm -f database-container
+      fi
+      docker run -d --name database-container --network my-net -p 5432:5432 \-e POSTGRES_DB=gamesdatabase -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres \postgres:16
     - name: Pull da imagem da aplicação no dockerhub
       run: docker pull mihkenia/games-deploy:latest
     - name: Criar/rodar o container da aplicação
