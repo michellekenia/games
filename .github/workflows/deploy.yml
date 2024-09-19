@@ -11,9 +11,9 @@ jobs:
       - name: Checkout source 
         uses: actions/checkout@v4
       - name: Login no docker
-        run: docker login -u ${{secrets.DOCKER_USER}} -p ${{secrets.DOCKER_PASS}}
+        run: echo ${{secrets.DOCKER_PASS}} | docker login -u ${{secrets.DOCKER_USER}} --password-stdin
       - name: Build docker image 
-        run: docker build -t mihkenia/games-deploy .
+        run: docker build -t mihkenia/games-deploy:latest .
       - name: Publicar a imagem da aplicação no docker hub 
         run: docker push mihkenia/games-deploy:latest
 
@@ -22,7 +22,10 @@ jobs:
     runs-on: [aws-ec2]
     steps: 
     - name: Criar network
-      run: docker network create my-net
+      run: |
+          if ! docker network ls | grep -q my-net; then
+            docker network create my-net
+          fi
     - name: Pull da imagem do postgres:16
       run: docker pull postgres:16
     - name: Criar/rodar o container do banco de dados
