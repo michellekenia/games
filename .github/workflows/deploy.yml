@@ -30,6 +30,15 @@ jobs:
       run: docker pull postgres:16
     - name: Criar/rodar o container do banco de dados
       run: docker run -d --name database-container --network my-net -p 5432:5432 -e POSTGRES_DB=gamesdatabase -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres postgres:16
+    - name: Aguardar o banco de dados estar pronto
+        run: |
+          for i in {1..30}; do
+            if docker exec database-container pg_isready -U postgres; then
+              break
+            fi
+            echo "Aguardando o banco de dados estar pronto..."
+            sleep 5
+          done
     - name: Pull da imagem da aplicação no dockerhub
       run: docker pull mihkenia/games-deploy:latest
     - name: Criar/rodar o container da aplicação
