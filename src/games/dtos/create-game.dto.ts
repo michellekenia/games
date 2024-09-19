@@ -3,5 +3,6 @@ export class CreateGameDto {
   name: string;
   platforms: string[];
 
+
   
 }
