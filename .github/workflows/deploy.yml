@@ -64,6 +64,6 @@ jobs:
           -e DB_URL="postgresql://postgres:postgres@database-container:5432/gamesdatabase?schema=public" \
           mihkenia/games-deploy:latest sh -c "npm run migration:run && npm run start"
     - name: Limpar imagens e contêineres não utilizados
-      run: docker system prune -f --volumes 
+      run: docker system prune -f --volumes
 
       
