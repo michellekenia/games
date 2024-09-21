@@ -42,12 +42,12 @@ jobs:
     - name: Pull da imagem da aplicação no dockerhub
       run: docker pull mihkenia/games-deploy:latest
     - name: Deletar container do app existente
-        run: |
+      run: |
           if docker container inspect app-container &> /dev/null; then
             docker rm -f app-container
           else
             echo "O container app-container não existe."
-          fi   
+          fi
     - name: Criar/rodar o container da aplicação
       run: docker run -d -p 3000:3000 --name app-container --network my-net -e DB_URL="postgresql://postgres:postgres@database-container:5432/gamesdatabase?schema=public" mihkenia/games-deploy:latest sh -c "npm run migration:run && npm run start"
     
