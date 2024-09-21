@@ -12,11 +12,16 @@ jobs:
         uses: actions/checkout@v4
       - name: Login no docker
         run: echo ${{secrets.DOCKER_PASS}} | docker login -u ${{secrets.DOCKER_USER}} --password-stdin
-      - name: Build Docker image 
+      - name: Verificar espaço em disco
         run: |
-          echo "Verificando espaço em disco..."
+          echo "Espaço em disco:"
           df -h
-          docker build -t mihkenia/games-deploy:latest .
+          if [ $(df / | tail -1 | awk '{print $4}') -lt 1000000 ]; then
+            echo "Espaço em disco insuficiente!"
+            exit 1
+          fi  
+      - name: Build Docker image 
+        run: docker build -t mihkenia/games-deploy:latest .
       - name: Publicar a imagem da aplicação no docker hub 
         run: docker push mihkenia/games-deploy:latest
 
@@ -40,12 +45,7 @@ jobs:
             docker run -d --name database-container --network my-net -p 5432:5432 -e POSTGRES_DB=gamesdatabase -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres postgres:16
           fi
     - name: Pull da imagem da aplicação no Docker Hub
-      run: |
-          if ! docker pull mihkenia/games-deploy:latest; then
-          echo "Falha ao puxar a imagem do Docker Hub."
-          exit 1
-          fi
-
+      run: docker pull mihkenia/games-deploy:latest
     - name: Deletar container do app existente
       run: |
           if docker container inspect app-container &> /dev/null; then
@@ -54,7 +54,12 @@ jobs:
             echo "O container app-container não existe."
           fi
     - name: Criar/rodar o container da aplicação
-      run: docker run -d -p 3000:3000 --name app-container --network my-net -e DB_URL="postgresql://postgres:postgres@database-container:5432/gamesdatabase?schema=public" mihkenia/games-deploy:latest sh -c "npm run migration:run && npm run start"
-    
+      run: |
+          set -e # Aborta se qualquer comando falhar
+          docker run -d -p 3000:3000 --name app-container --network my-net \
+          -e DB_URL="postgresql://postgres:postgres@database-container:5432/gamesdatabase?schema=public" \
+          mihkenia/games-deploy:latest sh -c "npm run migration:run && npm run start"
+    - name: Limpar imagens e contêineres não utilizados
+        run: docker system prune -f --volumes 
 
       
