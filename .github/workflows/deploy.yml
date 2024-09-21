@@ -12,6 +12,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Login no docker
         run: echo ${{secrets.DOCKER_PASS}} | docker login -u ${{secrets.DOCKER_USER}} --password-stdin
+      - name: Limpar imagens e contêineres não utilizados
+        run: docker system prune -af --volumes
       - name: Verificar espaço em disco
         run: |
           echo "Espaço em disco:"
@@ -21,7 +23,9 @@ jobs:
             exit 1
           fi  
       - name: Build Docker image 
-        run: docker build -t mihkenia/games-deploy:latest .
+        run: |
+          set -e # Aborta se qualquer comando falhar
+          docker build -t mihkenia/games-deploy:latest .
       - name: Publicar a imagem da aplicação no docker hub 
         run: docker push mihkenia/games-deploy:latest
 
